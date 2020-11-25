@@ -1,6 +1,9 @@
 {
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
+    ],
     "python.linting.mypyEnabled": false,
     "python.linting.enabled": true,
     "python.testing.unittestEnabled": false,

@@ -13,7 +13,7 @@ SESSION_CONFIGS = [
     dict(
         name='tictactoe',
         app_sequence=['tictactoe'],
-        num_demo_participants=1
+        num_demo_participants=2
     ),
 ]
 
