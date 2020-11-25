@@ -35,11 +35,20 @@ function show_status(msg) {
     $("#status").text(msg);
 }
 
+function show_error(msg) {
+    if( msg ) {
+        $("#error").text(msg).removeClass('hidden');
+        window.setInterval(()=>{$("#error").text(msg).addClass('hidden');}, 3000);
+    } else {
+        $("#error").text("").addClass('hidden');
+    }
+}
+
 function liveRecv(msg) {
-    console.debug("recv", msg);
+    show_error("");
 
     if( msg.type == 'error' ) {
-        console.error(msg.error);
+        show_error(msg.error);
     }
 
     if( msg.type == 'game' ) {
@@ -85,8 +94,12 @@ function liveRecv(msg) {
 
 $(function() {
     $('table').on('click', (e) => {
-        if( game.turn == game.symbol && !game.over ) {
+        if( game.over ) return;
+        if( game.turn != game.symbol ) {
+            show_error("Not your turn");
+        } else {
             make_move($(e.target).data('i') - 1);
+            show_error("");
         }
     });
 
