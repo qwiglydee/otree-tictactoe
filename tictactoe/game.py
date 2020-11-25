@@ -69,10 +69,10 @@ class Game(object):
         p2_win = win(set(self.places(self.SYMBOLS[1])))
 
         if p1_win:
-            return True, self.SYMBOLS[0], p1_win
+            return True, self.SYMBOLS[0], [list(p) for p in p1_win]
 
         if p2_win:
-            return True, self.SYMBOLS[1], p2_win
+            return True, self.SYMBOLS[1], [list(p) for p in p2_win]
 
         if len(self.places(self.EMPTY)) == 0:
             return True, None, None
