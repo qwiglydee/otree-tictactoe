@@ -1,0 +1,25 @@
+version: "3.4"
+
+# for running `otree devserver`
+# no external services used
+
+volumes:
+  database: {}
+
+services:
+  app:
+    build:
+      context: .
+      target: devel
+      args:
+      - USERUID
+      - USERGID
+    env_file:
+    - .env
+    environment:
+    - PORT=8000
+    ports:
+    - 8000:8000
+    volumes:
+    - .:/work:Z
+    command: sleep infinity

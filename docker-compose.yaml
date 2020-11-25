@@ -1,0 +1,37 @@
+version: "3.4"
+
+# for production/testing
+# simulates environment required for `otree prodserver`
+
+volumes:
+  database: {}
+
+services:
+  app:
+    build:
+      context: .
+      target: devel
+      args:
+      - USERUID
+      - USERGID
+    env_file:
+    - .env
+    environment:
+    - PORT=8000
+    ports:
+    - 8000:8000
+    volumes:
+    - .:/work:Z
+  depends_on:
+  - db
+  - redis
+
+  db:
+    image: postgres:13-alpine
+    volumes:
+    - database:/var/lib/postgresql/data
+    env_file:
+    - .env
+
+  redis:
+    image: redis:6-alpine

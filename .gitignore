@@ -1,0 +1,10 @@
+.*
+!.gitignore
+!.dockerignore
+!.vscode
+!.devcontainer.json
+
+staticfiles
+*.sqlite3
+__pycache__/
+*.otreezip
