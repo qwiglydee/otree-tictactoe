@@ -1,8 +1,9 @@
 const game = {
     symbol: js_vars['symbol'],
+    ai: js_vars['ai'],
     field: js_vars['field'],
     turn: js_vars['turn'],
-    ai: js_vars['ai']
+    over: false,
 }
 
 function show_field() {
@@ -19,11 +20,20 @@ function show_field() {
     $('#turn_sym').text(game.turn);
 }
 
+function highlight(pattern) {
+    var cells = $('td');
+    for(i of msg.pattern) {
+        $(cells[i]).addClass('bg-info');
+    }
+}
+
 function make_move(i) {
-    liveSend({'move': i});
+    liveSend({type: 'move', place: i});
 }
 
 function liveRecv(msg) {
+    console.debug("recv", msg);
+
     if( msg.type == 'error' ) {
         console.error(msg.error);
     }
@@ -34,34 +44,41 @@ function liveRecv(msg) {
         show_field();
 
         if( game.ai && game.turn != game.symbol ) {
-            liveSend('waitai');
+            liveSend({type: 'waitai'});
         }
     }
 
     if( msg.type == 'gameover' ) {
         game.field = msg.field;
         game.turn = msg.turn;
+        game.over = true;
         show_field();
 
         $('#turn').addClass('hidden');
         $('#win').removeClass('hidden');
-        if( msg.winner == game.symbol ) {
-            $('#win').text("You won");
-        } else {
-            $('#win').text("You lost");
-        }
 
-        var cells = $('td');
-        for(i of msg.pattern) {
-            $(cells[i]).addClass('bg-info');
+        if(msg.winner == null) {
+            $('#win').text("Tie!");
+        } else {
+            if(msg.winner == game.symbol) {
+                $('#win').text("You won");
+            } else {
+                $('#win').text("You lost");
+            }
+
+            for(p of msg.pattern) {
+                highlight(p);
+            }
         }
     }
 }
 
 $(function() {
     $('table').on('click', (e) => {
-        make_move($(e.target).data('i') - 1);
+        if(game.turn == game.symbol && !game.over) {
+            make_move($(e.target).data('i') - 1);
+        }
     });
 
-    show_field();
+    liveSend({type: 'start'});
 });

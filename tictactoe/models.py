@@ -1,5 +1,6 @@
 import random
 import json
+from tictactoe.game import GameError
 
 from otree.api import (
     models,
@@ -33,7 +34,6 @@ class Subsession(BaseSubsession):
     ai_class = models.StringField()
 
     def creating_session(self):
-        self.ai_class = self.session.config.get('ai_class')
         players = self.get_players()
 
         if len(players) == 2:
@@ -42,9 +42,9 @@ class Subsession(BaseSubsession):
             players[1].symbol = g.Game.SYMBOLS[1]
             self.ai_plays = None
         else:
-            players[0].symbol = g.Game.SYMBOLS[0]
-            self.ai_plays = g.Game.SYMBOLS[1]
-
+            self.ai_class = self.session.config.get('ai_class', random.choice(('smart', 'dumb')))
+            self.ai_plays = self.session.config.get('ai_plays', random.choice(g.Game.SYMBOLS))
+            players[0].symbol = g.Game.opponent(self.ai_plays)
         self.save_game(g.Game())
 
     def load_game(self):
@@ -52,7 +52,6 @@ class Subsession(BaseSubsession):
 
     def save_game(self, game):
         self._game = json.dumps(game.to_dict())
-
 
 
 class Group(BaseGroup):
@@ -67,15 +66,25 @@ class Player(BasePlayer):
     def handle_message(self, message):
         game = self.subsession.load_game()
 
-        if 'move' in message:
-            return self.handle_move(game, message['move'])
-        elif 'waitai' in message:
+        if message['type'] == 'move':
+            return self.handle_move(game, message['place'])
+        elif message['type'] == 'waitai':
             return self.handle_aimove(game)
+        elif message['type'] == 'start':
+            if self.subsession.ai_plays == 'x':
+                return self.handle_aimove(game)
+            else:
+                return {self.id_in_group: g.GameMessage(game)}
 
     def handle_move(self, game, move):
         try:
-            game = game.move(move, self.symbol)
+            if self.symbol != game.turn:
+                raise GameError("not your turn")
+
+            game = game.move(move)
+
             completed, winner, pattern = game.completed()
+
             self.subsession.save_game(game)
             self.subsession.save()
 
@@ -87,20 +96,25 @@ class Player(BasePlayer):
             return {self.id_in_group: g.GameErrorMessage(error=str(e))}
 
     def handle_aimove(self, game):
+        try:
+            if self.subsession.ai_plays != game.turn:
+                raise GameError("not AI's turn")
 
-        if self.subsession.ai_class == 'smart':
-            agent = SmartAgent()
-        else:
-            agent = DumbAgent()
+            if self.subsession.ai_class == 'smart':
+                agent = SmartAgent()
+            else:
+                agent = DumbAgent()
 
-        move = agent.decide(game, self.subsession.ai_plays)
-        game = game.move(move, self.subsession.ai_plays)
+            move = agent.decide(game)
+            game = game.move(move)
 
-        completed, winner, pattern = game.completed()
-        self.subsession.save_game(game)
-        self.subsession.save()
+            completed, winner, pattern = game.completed()
+            self.subsession.save_game(game)
+            self.subsession.save()
 
-        if completed:
-            return {0: g.GameOverMessage(game, winner=winner, pattern=pattern)}
-        else:
-            return {0: g.GameMessage(game)}
+            if completed:
+                return {0: g.GameOverMessage(game, winner=winner, pattern=pattern)}
+            else:
+                return {0: g.GameMessage(game)}
+        except g.GameError as e:
+            return {self.id_in_group: g.GameErrorMessage(error=str(e))}

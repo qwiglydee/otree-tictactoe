@@ -32,8 +32,12 @@ class Game(object):
 
         return Game(
             field=self.field[:place] + self.turn + self.field[place+1:],
-            turn=Game.SYMBOLS[(Game.SYMBOLS.index(self.turn) + 1) % 2]
+            turn=self.opponent(self.turn)
         )
+
+    @classmethod
+    def opponent(cls, player):
+        return cls.SYMBOLS[(cls.SYMBOLS.index(player) + 1) % 2]
 
     def places(self, sym):
         return tuple(i for i in range(len(self.field)) if self.field[i] == sym)
@@ -42,31 +46,35 @@ class Game(object):
         """Returns possible moves"""
         return self.places(self.EMPTY)
 
-    WINNING = {
-        (0, 1, 2),
-        (3, 4, 5),
-        (6, 7, 8),
-        (0, 3, 6),
-        (1, 4, 7),
-        (2, 5, 8),
-        (0, 4, 8),
-        (2, 4, 6)
-    }
+    WINNING = [
+        {0, 1, 2},
+        {3, 4, 5},
+        {6, 7, 8},
+        {0, 3, 6},
+        {1, 4, 7},
+        {2, 5, 8},
+        {0, 4, 8},
+        {2, 4, 6}
+    ]
 
     def completed(self):
         """Checks if the game is completed and who is the winner
 
         Returns: bool, winner symbol, winner pattern
         """
-        p0 = self.places(self.EMPTY)
-        p1 = self.places(self.SYMBOLS[0])
-        p2 = self.places(self.SYMBOLS[1])
+        def win(pos):
+            return list(filter(lambda win: pos >= win, self.WINNING))
 
-        if p1 in self.WINNING:
-            return True, self.SYMBOLS[0], p1
-        if p2 in self.WINNING:
-            return True, self.SYMBOLS[1], p2
-        if len(p0) == 0:
+        p1_win = win(set(self.places(self.SYMBOLS[0])))
+        p2_win = win(set(self.places(self.SYMBOLS[1])))
+
+        if p1_win:
+            return True, self.SYMBOLS[0], p1_win
+
+        if p2_win:
+            return True, self.SYMBOLS[1], p2_win
+
+        if len(self.places(self.EMPTY)) == 0:
             return True, None, None
         else:
             return False, None, None

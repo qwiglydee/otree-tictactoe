@@ -19,13 +19,15 @@ SESSION_CONFIGS = [
         name='tictactoe_ai_dumb',
         app_sequence=['tictactoe'],
         num_demo_participants=1,
-        ai_class='dumb'
+        ai_class='dumb',
+        ai_plays='o'
     ),
     dict(
         name='tictactoe_ai_smart',
         app_sequence=['tictactoe'],
         num_demo_participants=1,
-        ai_class='smart'
+        ai_class='smart',
+        ai_plays='o'
     ),
 ]
 
