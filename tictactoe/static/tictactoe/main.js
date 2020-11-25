@@ -1,14 +1,15 @@
 const game = {
     symbol: js_vars['symbol'],
     field: js_vars['field'],
-    turn: js_vars['turn']
+    turn: js_vars['turn'],
+    ai: js_vars['ai']
 }
 
 function show_field() {
     $('td').each((i, e) => {
         var e = $(e);
         var sym = game.field[e.data('i')-1];
-        if(sym == '_') {
+        if(sym == '.') {
             e.text('');
         } else {
             e.text(sym);
@@ -31,6 +32,10 @@ function liveRecv(msg) {
         game.field = msg.field;
         game.turn = msg.turn;
         show_field();
+
+        if( game.ai && game.turn != game.symbol ) {
+            liveSend('waitai');
+        }
     }
 
     if( msg.type == 'gameover' ) {

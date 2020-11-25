@@ -25,17 +25,14 @@ class Game(object):
         self.field = field or self.EMPTY * 9
         self.turn = turn = turn or self.SYMBOLS[0]
 
-    def move(self, place, symbol):
+    def move(self, place):
         """Makes a move and returns new game state"""
-        if symbol != self.turn:
-            raise WrongTurn()
-
         if self.field[place] != self.EMPTY:
             raise WrongMove()
 
         return Game(
-            field=self.field[:place] + symbol + self.field[place+1:],
-            turn=Game.SYMBOLS[(Game.SYMBOLS.index(symbol) + 1) % 2]
+            field=self.field[:place] + self.turn + self.field[place+1:],
+            turn=Game.SYMBOLS[(Game.SYMBOLS.index(self.turn) + 1) % 2]
         )
 
     def places(self, sym):
@@ -61,7 +58,7 @@ class Game(object):
 
         Returns: bool, winner symbol, winner pattern
         """
-        p0 = self.places('_')
+        p0 = self.places(self.EMPTY)
         p1 = self.places(self.SYMBOLS[0])
         p2 = self.places(self.SYMBOLS[1])
 

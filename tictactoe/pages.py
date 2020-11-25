@@ -13,6 +13,8 @@ class Game(Page):
     def js_vars(self):
         vars = {}
         vars['symbol'] = self.player.symbol
+        if self.subsession.ai_class:
+            vars['ai'] = True
         vars.update(self.subsession.load_game().to_dict())
         return vars
 

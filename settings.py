@@ -11,9 +11,21 @@ SESSION_CONFIG_DEFAULTS = dict(
 
 SESSION_CONFIGS = [
     dict(
-        name='tictactoe',
+        name='tictactoe_2',
         app_sequence=['tictactoe'],
         num_demo_participants=2
+    ),
+    dict(
+        name='tictactoe_ai_dumb',
+        app_sequence=['tictactoe'],
+        num_demo_participants=1,
+        ai_class='dumb'
+    ),
+    dict(
+        name='tictactoe_ai_smart',
+        app_sequence=['tictactoe'],
+        num_demo_participants=1,
+        ai_class='smart'
     ),
 ]
 

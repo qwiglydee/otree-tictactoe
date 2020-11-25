@@ -12,9 +12,9 @@ from otree.api import (
 )
 
 from . import game as g
-# from .ai import random_play
+from .ai import DumbAgent, SmartAgent
 
-author = 'Your name here'
+author = 'qwiglydee@gmail.com'
 
 doc = """
 Your app description
@@ -30,8 +30,10 @@ class Constants(BaseConstants):
 class Subsession(BaseSubsession):
     _game = models.StringField()
     ai_plays = models.StringField()
+    ai_class = models.StringField()
 
     def creating_session(self):
+        self.ai_class = self.session.config.get('ai_class')
         players = self.get_players()
 
         if len(players) == 2:
@@ -52,6 +54,7 @@ class Subsession(BaseSubsession):
         self._game = json.dumps(game.to_dict())
 
 
+
 class Group(BaseGroup):
     pass
 
@@ -63,15 +66,16 @@ class Player(BasePlayer):
 
     def handle_message(self, message):
         game = self.subsession.load_game()
-        print(game, self.symbol, message)
+
+        if 'move' in message:
+            return self.handle_move(game, message['move'])
+        elif 'waitai' in message:
+            return self.handle_aimove(game)
+
+    def handle_move(self, game, move):
         try:
-            game = game.move(message['move'], self.symbol)
-            print(">", game)
-
+            game = game.move(move, self.symbol)
             completed, winner, pattern = game.completed()
-            if completed:
-                print("win", winner, pattern)
-
             self.subsession.save_game(game)
             self.subsession.save()
 
@@ -81,3 +85,22 @@ class Player(BasePlayer):
                 return {0: g.GameMessage(game)}
         except g.GameError as e:
             return {self.id_in_group: g.GameErrorMessage(error=str(e))}
+
+    def handle_aimove(self, game):
+
+        if self.subsession.ai_class == 'smart':
+            agent = SmartAgent()
+        else:
+            agent = DumbAgent()
+
+        move = agent.decide(game, self.subsession.ai_plays)
+        game = game.move(move, self.subsession.ai_plays)
+
+        completed, winner, pattern = game.completed()
+        self.subsession.save_game(game)
+        self.subsession.save()
+
+        if completed:
+            return {0: g.GameOverMessage(game, winner=winner, pattern=pattern)}
+        else:
+            return {0: g.GameMessage(game)}
