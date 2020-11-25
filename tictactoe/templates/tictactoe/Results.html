@@ -7,7 +7,11 @@
 
 {% block content %}
 
+    {% if player.win %}
+    <p>You have won in {{subsession.moves}} moves.</p>
+    {% else %}
+    <p>You have lost</p>
+    {% endif %}
+
     {% next_button %}
 {% endblock %}
-
-

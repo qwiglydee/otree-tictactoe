@@ -25,13 +25,14 @@ Your app description
 class Constants(BaseConstants):
     name_in_url = 'game'
     players_per_group = None
-    num_rounds = 1
+    num_rounds = 3
 
 
 class Subsession(BaseSubsession):
     _game = models.StringField()
     ai_plays = models.StringField()
     ai_class = models.StringField()
+    moves = models.IntegerField(initial=0)
 
     def creating_session(self):
         players = self.get_players()
@@ -60,8 +61,7 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     symbol = models.StringField(choices=g.Game.SYMBOLS)
-    rounds = models.IntegerField()
-    wins = models.IntegerField()
+    win = models.BooleanField()
 
     def handle_message(self, message):
         game = self.subsession.load_game()
@@ -82,13 +82,16 @@ class Player(BasePlayer):
 
             completed, winner, pattern = game.completed()
 
+            self.subsession.moves += 1
             self.subsession.save_game(game)
             self.subsession.save()
 
             if completed:
+                self.handle_gameover(winner)
                 return {0: g.GameOverMessage(game, winner=winner, pattern=pattern)}
             else:
                 return {0: g.GameMessage(game)}
+
         except g.GameError as e:
             return {self.id_in_group: g.GameErrorMessage(error=str(e))}
 
@@ -106,12 +109,19 @@ class Player(BasePlayer):
             game = game.move(move)
 
             completed, winner, pattern = game.completed()
+
+            self.subsession.moves += 1
             self.subsession.save_game(game)
             self.subsession.save()
 
             if completed:
+                self.handle_gameover(winner)
                 return {0: g.GameOverMessage(game, winner=winner, pattern=pattern)}
             else:
                 return {0: g.GameMessage(game)}
         except g.GameError as e:
             return {self.id_in_group: g.GameErrorMessage(error=str(e))}
+
+    def handle_gameover(self, winner):
+        self.win = (self.symbol == winner)
+        self.save()
