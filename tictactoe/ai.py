@@ -4,20 +4,27 @@ from functools import lru_cache
 from .game import Game
 
 
-class DumbAgent(object):
-    """dumb AI agent that plays randomly"""
-    def decide(self, game):
-        return random.choice(game.moves())
-
-
-class SmartAgent(DumbAgent):
-    def decide(self, game):
+class Agent(object):
+    def play(self, game):
         moves = game.moves()
 
         if len(moves) == 0:
             raise ValueError("invalid game state")
         if len(moves) == 1:
             return moves[0]
+
+        return self.decide(game)
+
+
+class DumbAgent(Agent):
+    """dumb AI agent that plays randomly"""
+    def decide(self, game):
+        return random.choice(game.moves())
+
+
+class SmartAgent(Agent):
+    def decide(self, game):
+        moves = game.moves()
 
         onestep = [a for a in moves if game.move(a).completed()[0]]
         if len(onestep) > 0:

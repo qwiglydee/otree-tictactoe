@@ -71,10 +71,7 @@ class Player(BasePlayer):
         elif message['type'] == 'waitai':
             return self.handle_aimove(game)
         elif message['type'] == 'start':
-            if self.subsession.ai_plays == 'x':
-                return self.handle_aimove(game)
-            else:
-                return {self.id_in_group: g.GameMessage(game)}
+            return {self.id_in_group: g.GameMessage(game)}
 
     def handle_move(self, game, move):
         try:
@@ -105,7 +102,7 @@ class Player(BasePlayer):
             else:
                 agent = DumbAgent()
 
-            move = agent.decide(game)
+            move = agent.play(game)
             game = game.move(move)
 
             completed, winner, pattern = game.completed()

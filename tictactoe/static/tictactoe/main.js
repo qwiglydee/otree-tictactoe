@@ -22,13 +22,17 @@ function show_field() {
 
 function highlight(pattern) {
     var cells = $('td');
-    for(i of msg.pattern) {
+    for(i of pattern) {
         $(cells[i]).addClass('bg-info');
     }
 }
 
 function make_move(i) {
     liveSend({type: 'move', place: i});
+}
+
+function show_status(msg) {
+    $("#status").text(msg);
 }
 
 function liveRecv(msg) {
@@ -38,10 +42,16 @@ function liveRecv(msg) {
         console.error(msg.error);
     }
 
-    if( msg.type == 'game') {
+    if( msg.type == 'game' ) {
         game.field = msg.field;
         game.turn = msg.turn;
         show_field();
+
+        if( game.turn == game.symbol ) {
+            show_status("Make your move");
+        } else {
+            show_status("Wait for opponent's move");
+        }
 
         if( game.ai && game.turn != game.symbol ) {
             liveSend({type: 'waitai'});
@@ -57,13 +67,13 @@ function liveRecv(msg) {
         $('#turn').addClass('hidden');
         $('#win').removeClass('hidden');
 
-        if(msg.winner == null) {
-            $('#win').text("Tie!");
+        if( msg.winner == null ) {
+            show_status("Tie!");
         } else {
-            if(msg.winner == game.symbol) {
-                $('#win').text("You won");
+            if( msg.winner == game.symbol ) {
+                show_status("You won!");
             } else {
-                $('#win').text("You lost");
+                show_status("You lost!");
             }
 
             for(p of msg.pattern) {
@@ -75,7 +85,7 @@ function liveRecv(msg) {
 
 $(function() {
     $('table').on('click', (e) => {
-        if(game.turn == game.symbol && !game.over) {
+        if( game.turn == game.symbol && !game.over ) {
             make_move($(e.target).data('i') - 1);
         }
     });

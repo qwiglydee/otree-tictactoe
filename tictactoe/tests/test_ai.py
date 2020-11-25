@@ -7,7 +7,7 @@ def test_dumb_valid():
     agent = ai.DumbAgent()
     completed = False
     while(not completed):
-        move = agent.decide(game)
+        move = agent.play(game)
         game = game.move(move)
         completed, _, _ = game.completed()
 
@@ -18,7 +18,7 @@ def test_smart_valid():
     agent = ai.SmartAgent()
     completed = False
     while(not completed):
-        move = agent.decide(game)
+        move = agent.play(game)
         game = game.move(move)
         completed, _, _ = game.completed()
 
