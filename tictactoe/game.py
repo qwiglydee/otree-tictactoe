@@ -19,17 +19,18 @@ class Game(object):
     - turn: a symbol of current player
     """
     SYMBOLS = ('x', 'o')
+    EMPTY = '.'
 
     def __init__(self, field=None, turn=None):
-        self.field = field or '_________'
-        self.turn = turn = turn or Game.SYMBOLS[0]
+        self.field = field or self.EMPTY * 9
+        self.turn = turn = turn or self.SYMBOLS[0]
 
     def move(self, place, symbol):
         """Makes a move and returns new game state"""
         if symbol != self.turn:
             raise WrongTurn()
 
-        if self.field[place] != '_':
+        if self.field[place] != self.EMPTY:
             raise WrongMove()
 
         return Game(
@@ -42,7 +43,7 @@ class Game(object):
 
     def moves(self):
         """Returns possible moves"""
-        return self.places('_')
+        return self.places(self.EMPTY)
 
     WINNING = {
         (0, 1, 2),
