@@ -1,46 +1,60 @@
-#### development target
+#### building
 
-FROM python:3.8-slim AS devel
+FROM python:3.8-slim AS build
+
 ARG USERUID=1000
 ARG USERGID=1000
 
 RUN addgroup --gid $USERGID devuser && adduser --uid $USERUID --ingroup devuser --home /work --shell /bin/bash --disabled-password devuser
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update \
  && apt-get -y install --no-install-recommends \
  build-essential \
  python3-dev \
  libpq5 \
- libpq-dev \
- git
+ libpq-dev
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 COPY requirements*.txt /work
 
-# NB: installing as root, globally
 RUN pip install -r /work/requirements.txt
+
+
+#### development target
+
+FROM build AS devel
+
+RUN apt-get -y install --no-install-recommends \
+ git
+
 RUN pip install -r /work/requirements.devel.txt
 
-ENV PATH /work/.local/bin:$PATH
 WORKDIR /work
 USER devuser:devuser
 
-# MOUNT . /app  # from docker-compose or IDE
+COPY --chown=devuser:devuser . .
 
 CMD otree devserver $PORT
 
 
-#### demo-production target
+#### production target
 
-FROM devel
+FROM python:3.8-slim
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 RUN addgroup --system appuser && adduser --system --ingroup appuser --home /app --shell /bin/bash --disabled-password appuser
 
-# TODO: only copy files from devel
+RUN apt-get update \
+ && apt-get -y install --no-install-recommends \
+ libpq5
 
-ENV PATH /app/.local/bin:$PATH
+COPY --from=build /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+COPY --from=build /usr/local/bin /usr/local/bin
+
 WORKDIR /app
 USER appuser:appuser
 

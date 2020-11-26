@@ -7,7 +7,7 @@ volumes:
   database: {}
 
 services:
-  app:
+  web:
     build:
       context: .
       target: devel

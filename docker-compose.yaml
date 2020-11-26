@@ -7,24 +7,17 @@ volumes:
   database: {}
 
 services:
-  app:
-    build:
-      context: .
-      target: devel
-      args:
-      - USERUID
-      - USERGID
+  web:
+    build: .
     env_file:
     - .env
     environment:
     - PORT=8000
     ports:
     - 8000:8000
-    volumes:
-    - .:/work:Z
-  depends_on:
-  - db
-  - redis
+    depends_on:
+    - db
+    - redis
 
   db:
     image: postgres:13-alpine

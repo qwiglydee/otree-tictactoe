@@ -1,4 +1,5 @@
-# Sandwich game
+# Otree sample game
+
 
 Dockerfile
 
@@ -16,3 +17,20 @@ deploy.env
 
 ## Deployment
 
+### Stand-alone server
+
+- copy `deploy.env` into `.env` and tweak parameters
+- `docker-compose up -d` -- to build and start everything
+
+For first run:
+- `docker-compose exec web otree resetdb` -- to initialize database
+- `docker-compose restart web` -- restart after database init
+
+
+### Heroku
+
+...
+
+### OtreeHub
+
+...
