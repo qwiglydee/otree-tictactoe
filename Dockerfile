@@ -41,7 +41,7 @@ CMD otree devserver $PORT
 
 #### production target
 
-FROM python:3.8-slim
+FROM python:3.8-slim as prod
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1

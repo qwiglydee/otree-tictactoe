@@ -7,7 +7,7 @@
 		"docker-compose.devel.yaml"
 	],
 
-	"service": "app",
+	"service": "web",
 
 	"workspaceFolder": "/work",
 
