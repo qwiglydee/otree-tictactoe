@@ -1,107 +1,184 @@
-const game = {
-    symbol: js_vars['symbol'],
-    ai: js_vars['ai'],
-    field: js_vars['field'],
-    turn: js_vars['turn'],
-    over: false,
-}
-
-function show_field() {
-    $('td').each((i, e) => {
-        var e = $(e);
-        var sym = game.field[e.data('i')-1];
-        if(sym == '.') {
-            e.text('');
-        } else {
-            e.text(sym);
-        }
-    });
-
-    $('#turn_sym').text(game.turn);
-}
-
-function highlight(pattern) {
-    var cells = $('td');
-    for(i of pattern) {
-        $(cells[i]).addClass('bg-info');
+class Game {
+    /** State of the game */
+    constructor(player) {
+        this.player = player;
+        this.field = undefined;
+        this.turn = undefined;
+        this.over = false;
+        this.winner = null;
     }
 }
 
-function make_move(i) {
-    liveSend({type: 'move', place: i});
-}
 
-function show_status(msg) {
-    $("#status").text(msg);
-}
+class View {
+    /** rendering of the game */
+    constructor(game, elem) {
+        this.game = game;
+        this.$root = elem;
+        this.$cells = this.$root.find('td');
 
-function show_error(msg) {
-    if( msg ) {
+        this.$root.on('click', 'td', (ev) => {
+            var idx = Number($(ev.target).data('i') - 1);
+            this.$root.trigger('play', {idx: idx});
+        })
+    }
+
+    render() {
+        this.renderField();
+        this.showStatus("");
+        this.showTurn();
+        if (this.game.over) {
+            this.showWinner();
+        }
+    }
+
+    renderField() {
+        this.$cells.each((i, e) => {
+            var e = $(e);
+            var sym = this.game.field[e.data('i')-1];
+            if (sym == '.') {
+                e.text('');
+            } else {
+                e.text(sym);
+            }
+        });
+    }
+
+    showTurn() {
+        if (!this.game.over) {
+            $('#turn').text(`Current turn: ${this.game.turn}`);
+        } else {
+            $('#turn_sym').text("Game over!");
+        }
+    }
+
+    showStatus(msg) {
+        $("#status").text(msg);
+    }
+
+    showWinner() {
+        if (this.game.winner === null) {
+            this.showStatus("Tie!");
+        } else {
+            if (this.game.winner == this.game.player) {
+                this.showStatus("You win!");
+            } else {
+                this.showStatus("You lose!");
+            }
+        }
+
+    }
+
+    showError(msg) {
         $("#error").text(msg).removeClass('hidden');
-        window.setInterval(()=>{$("#error").text(msg).addClass('hidden');}, 3000);
-    } else {
+    }
+
+    hideError() {
         $("#error").text("").addClass('hidden');
     }
+
+    popError(msg) {
+        this.showError(msg);
+        window.setInterval(() => this.hideError, 3000);
+    }
+
+    highlightPattern(pattern) {
+        for(var i of pattern) {
+            this.$cells.eq(i).addClass('bg-info');
+        }
+    }
 }
 
-function liveRecv(msg) {
-    show_error("");
 
-    if( msg.type == 'error' ) {
-        show_error(msg.error);
-    }
+class Controller {
+    /** communication with user and server */
+    constructor(game, view, aiplays) {
+        this.aiplays = aiplays;
 
-    if( msg.type == 'game' ) {
-        game.field = msg.field;
-        game.turn = msg.turn;
-        show_field();
+        this.game = game;
+        this.view = view;
 
-        if( game.turn == game.symbol ) {
-            show_status("Make your move");
-        } else {
-            show_status("Wait for opponent's move");
-        }
-
-        if( game.ai && game.turn != game.symbol ) {
-            liveSend({type: 'waitai'});
-        }
-    }
-
-    if( msg.type == 'gameover' ) {
-        game.field = msg.field;
-        game.turn = msg.turn;
-        game.over = true;
-        show_field();
-
-        $('#turn').addClass('hidden');
-        $('#win').removeClass('hidden');
-
-        if( msg.winner == null ) {
-            show_status("Tie!");
-        } else {
-            if( msg.winner == game.symbol ) {
-                show_status("You won!");
+        window.liveRecv = (msg) => {
+            if(msg.type == 'game') {
+                this.recvGame(msg);
+            } else if(msg.type == 'gameover') {
+                this.recvGameOver(msg);
+            } else if(msg.type == 'error') {
+                this.recvError(msg);
             } else {
-                show_status("You lost!");
+                console.error("Unrecognized message:", msg);
             }
+        }
 
-            for(p of msg.pattern) {
-                highlight(p);
+        this.view.$root.on('play', (ev, params) => this.makeMove(params.idx));
+    }
+
+    sendWait() {
+        window.liveSend({type: 'waitai'});
+    }
+
+    sendStart() {
+        window.liveSend({type: 'start'});
+    }
+
+    sendMove(i) {
+        window.liveSend({type: 'move', place: i});
+    }
+
+    recvGame(msg) {
+        this.game.field = msg.field;
+        this.game.turn = msg.turn;
+        this.view.render();
+
+        if (this.game.turn == this.game.player) {
+            this.view.showStatus("Make your move");
+        } else {
+            this.view.showStatus("Wait for opponent's move");
+        }
+
+        if (this.aiplays && this.aiplays == this.game.turn) {
+            this.sendWait();
+        }
+    }
+
+    recvError(msg) {
+        this.view.popError(msg.error);
+    }
+
+    recvGameOver(msg) {
+        this.game.field = msg.field;
+        this.game.turn = msg.turn;
+        this.game.over = true;
+        this.game.winner = msg.winner;
+        this.view.render();
+
+        if (msg.pattern) {
+            for (var p of msg.pattern) {
+                this.view.highlightPattern(p);
             }
         }
     }
+
+    start() {
+        this.sendStart();
+    }
+
+    makeMove(place) {
+        if (this.game.turn != this.game.player) {
+            this.view.popError("Not your turn!");
+        } else {
+            this.view.hideError();
+            this.sendMove(place);
+        }
+    }
 }
+
+
+var game, view, ctrl;
 
 $(function() {
-    $('table').on('click', (e) => {
-        if( game.over ) return;
-        if( game.turn != game.symbol ) {
-            show_error("Not your turn");
-        } else {
-            make_move($(e.target).data('i') - 1);
-            show_error("");
-        }
-    });
-
-    liveSend({type: 'start'});
-});
+    game = new Game(js_vars['player_symbol']);
+    view = new View(game, $('#game'));
+    ctrl = new Controller(game, view, js_vars['ai_symbol']);
+    ctrl.start();
+})

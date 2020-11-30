@@ -17,7 +17,7 @@ The Game
 {% block content %}
 
 <div class="d-flex flex-row justify-content-center m-2 p-2">
-    <div class="d-flex flex-column align-items-center border rounded shadow p-2">
+    <div class="d-flex flex-column align-items-center border rounded shadow p-2" id="game">
         <h6>You play: {{player.symbol}}</h6>
         <table>
             <tr>
@@ -36,7 +36,7 @@ The Game
                 <td data-i=9></td>
             </tr>
         </table>
-        <p id="turn">Current turn: <span id="turn_sym"></span></p>
+        <p id="turn"></p>
         <p id="status"></p>
     </div>
 </div>
