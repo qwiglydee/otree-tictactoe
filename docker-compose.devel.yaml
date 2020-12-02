@@ -1,11 +1,5 @@
 version: "3.4"
 
-# for running `otree devserver`
-# no external services used
-
-volumes:
-  database: {}
-
 services:
   web:
     build:
@@ -16,10 +10,8 @@ services:
       - USERGID
     env_file:
     - .env
-    environment:
-    - PORT=8000
     ports:
-    - 8000:8000
+    - $PORT:$PORT
     volumes:
     - .:/work:Z
-    command: sleep infinity
+    command: sleep infinity  # needed for VSCode/RemoteContainer

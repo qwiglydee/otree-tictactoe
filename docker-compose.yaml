@@ -1,8 +1,5 @@
 version: "3.4"
 
-# for production/testing
-# simulates environment required for `otree prodserver`
-
 volumes:
   database: {}
 
@@ -11,10 +8,8 @@ services:
     build: .
     env_file:
     - .env
-    environment:
-    - PORT=8000
     ports:
-    - 8000:8000
+    - $PORT:$PORT
     depends_on:
     - db
     - redis
