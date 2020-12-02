@@ -3,7 +3,7 @@ class GameError(Exception):
 
 
 class Game(object):
-    """Game logic
+    """Core game logic
     Independent from otree stuff
     Holds game state
     Implements all the game logic
