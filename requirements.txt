@@ -1,2 +1,3 @@
+# oTree-may-not-overwrite-this-file
 psycopg2~=2.8.0
 otree~=3.0.0

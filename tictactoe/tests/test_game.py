@@ -1,36 +1,36 @@
 import pytest
 
-from .. import game as g
+from ..game import Game, GameError
 
 
 def test_moves():
-    game = g.Game(".x.o.x.o.")
+    game = Game(".x.o.x.o.")
     assert game.moves() == (0, 2, 4, 6, 8)
 
 
 def test_move_x():
-    game = g.Game(".x.o.x.o.", 'x')
-    game = game.move(4)
-    assert game.field == ".x.oxx.o."
+    game = Game(".x.o.x.o.", 'x')
+    game.move(4)
+    assert game.board == ".x.oxx.o."
     assert game.turn == 'o'
 
 
 def test_move_o():
-    game = g.Game(".x.o.x.o.", 'o')
-    game = game.move(4)
-    assert game.field == ".x.oox.o."
+    game = Game(".x.o.x.o.", 'o')
+    game.move(4)
+    assert game.board == ".x.oox.o."
     assert game.turn == 'x'
 
 
 def test_move_invalid_move():
-    game = g.Game(".x.o.x.o.", 'x')
-    with pytest.raises(g.WrongMove):
+    game = Game(".x.o.x.o.", 'x')
+    with pytest.raises(GameError):
         game.move(1)
-    with pytest.raises(g.WrongMove):
+    with pytest.raises(GameError):
         game.move(3)
-    with pytest.raises(g.WrongMove):
+    with pytest.raises(GameError):
         game.move(5)
-    with pytest.raises(g.WrongMove):
+    with pytest.raises(GameError):
         game.move(7)
 
 
@@ -63,20 +63,20 @@ def pytest_generate_tests(metafunc):
 
 
 def test_win(pattern, winner):
-    game = g.Game(pattern)
+    game = Game(pattern)
     completed, winner, _ = game.completed()
     assert completed
     assert winner == winner
 
 
 def test_tie(drawn):
-    game = g.Game(drawn, 'x')
+    game = Game(drawn, 'x')
     completed, winner, _ = game.completed()
     assert completed
     assert winner is None
 
 
 def test_incompleted():
-    game = g.Game(".x.o.x.o.", 'x')
+    game = Game(".x.o.x.o.", 'x')
     completed, _, _ = game.completed()
     assert not completed

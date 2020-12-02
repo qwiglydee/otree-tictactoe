@@ -2,49 +2,48 @@ class GameError(Exception):
     pass
 
 
-class WrongTurn(GameError):
-    def __init__(self):
-        super().__init__("Wrong turn")
-
-
-class WrongMove(GameError):
-    def __init__(self):
-        super().__init__("Wrong move")
-
-
 class Game(object):
-    """Game state object
-    Items:
-    - field: a string of characters
-    - turn: a symbol of current player
+    """Game logic
+    Independent from otree stuff
+    Holds game state
+    Implements all the game logic
     """
+
     SYMBOLS = ('x', 'o')
     EMPTY = '.'
 
-    def __init__(self, field=None, turn=None):
-        self.field = field or self.EMPTY * 9
-        self.turn = turn = turn or self.SYMBOLS[0]
+    # game board encoded as string in row-major order
+    board: str
+    # symbol of current player
+    turn: str
 
-    def move(self, place):
-        """Makes a move and returns new game state"""
-        if self.field[place] != self.EMPTY:
-            raise WrongMove()
+    def __init__(self, board=None, turn=None):
+        self.board = board or self.EMPTY * 9
+        self.turn = turn or self.SYMBOLS[0]
 
-        return Game(
-            field=self.field[:place] + self.turn + self.field[place+1:],
-            turn=self.opponent(self.turn)
-        )
+    def __repr__(self):
+        return f"<Game {self.board}/{self.turn}>"
 
     @classmethod
-    def opponent(cls, player):
-        return cls.SYMBOLS[(cls.SYMBOLS.index(player) + 1) % 2]
+    def opponent(cls, sym):
+        """Return opponent symbol for given one"""
+        return cls.SYMBOLS[(cls.SYMBOLS.index(sym) + 1) % 2]
 
     def places(self, sym):
-        return tuple(i for i in range(len(self.field)) if self.field[i] == sym)
+        """Return indexes of cells containing given sym"""
+        return tuple(i for i in range(len(self.board)) if self.board[i] == sym)
 
     def moves(self):
         """Returns possible moves"""
         return self.places(self.EMPTY)
+
+    def move(self, place):
+        """Makes a move and changes state"""
+        if self.board[place] != self.EMPTY:
+            raise GameError("Wrong move")
+
+        self.board = self.board[:place] + self.turn + self.board[place+1:]
+        self.turn = self.opponent(self.turn)
 
     WINNING = [
         {0, 1, 2},
@@ -60,7 +59,7 @@ class Game(object):
     def completed(self):
         """Checks if the game is completed and who is the winner
 
-        Returns: bool, winner symbol, winner pattern
+        Returns: bool, winner symbol, winning pattern
         """
         def win(pos):
             return list(filter(lambda win: pos >= win, self.WINNING))
@@ -78,31 +77,3 @@ class Game(object):
             return True, None, None
         else:
             return False, None, None
-
-    def __repr__(self):
-        return f"""Game("{self.field}", '{self.turn}')"""
-
-    def to_dict(self):
-        return dict(field=self.field, turn=self.turn)
-
-    @classmethod
-    def from_dict(cls, d):
-        return cls(d['field'], d['turn'])
-
-
-class GameMessage(dict):
-    TYPE = 'game'
-
-    def __init__(self, game=None, **kwargs):
-        super().__init__(**kwargs)
-        self['type'] = self.TYPE
-        if game:
-            self.update(game.to_dict())
-
-
-class GameOverMessage(GameMessage):
-    TYPE = 'gameover'
-
-
-class GameErrorMessage(GameMessage):
-    TYPE = 'error'

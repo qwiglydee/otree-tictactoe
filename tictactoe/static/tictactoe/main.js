@@ -2,7 +2,7 @@ class Game {
     /** State of the game */
     constructor(player) {
         this.player = player;
-        this.field = undefined;
+        this.board = undefined;
         this.turn = undefined;
         this.over = false;
         this.winner = null;
@@ -24,7 +24,7 @@ class View {
     }
 
     render() {
-        this.renderField();
+        this.renderBoard();
         this.showStatus("");
         this.showTurn();
         if (this.game.over) {
@@ -32,10 +32,10 @@ class View {
         }
     }
 
-    renderField() {
+    renderBoard() {
         this.$cells.each((i, e) => {
             var e = $(e);
-            var sym = this.game.field[e.data('i')-1];
+            var sym = this.game.board[e.data('i')-1];
             if (sym == '.') {
                 e.text('');
             } else {
@@ -114,7 +114,7 @@ class Controller {
     }
 
     sendWait() {
-        window.liveSend({type: 'waitai'});
+        window.liveSend({type: 'ai'});
     }
 
     sendStart() {
@@ -126,7 +126,7 @@ class Controller {
     }
 
     recvGame(msg) {
-        this.game.field = msg.field;
+        this.game.board = msg.board;
         this.game.turn = msg.turn;
         this.view.render();
 
@@ -146,7 +146,7 @@ class Controller {
     }
 
     recvGameOver(msg) {
-        this.game.field = msg.field;
+        this.game.board = msg.board;
         this.game.turn = msg.turn;
         this.game.over = true;
         this.game.winner = msg.winner;

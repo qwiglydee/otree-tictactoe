@@ -1,25 +1,26 @@
-from .. import game as g, ai
+from ..game import Game
+from ..ai import GameState, DumbAgent, SmartAgent
 
 
 def test_dumb_valid():
     """Test if dumb agent makes valid moves"""
-    game = g.Game()
-    agent = ai.DumbAgent()
+    game = GameState(Game())
+    agent = DumbAgent()
     completed = False
     while(not completed):
         move = agent.play(game)
-        game = game.move(move)
+        game = game.advance(move)
         completed, _, _ = game.completed()
 
 
 def test_smart_valid():
     """Test if smart agent makes valid moves"""
-    game = g.Game()
-    agent = ai.SmartAgent()
+    game = GameState(Game())
+    agent = SmartAgent()
     completed = False
     while(not completed):
         move = agent.play(game)
-        game = game.move(move)
+        game = game.advance(move)
         completed, _, _ = game.completed()
 
 
@@ -43,7 +44,7 @@ def test_smart_strategy(pattern: str, player: str):
     initial = pattern.replace(player.upper(), '.')
     expected = pattern.index(player.upper())
 
-    game = g.Game(initial, player)
-    agent = ai.SmartAgent()
+    game = GameState(Game(initial, player))
+    agent = SmartAgent()
     decision = agent.decide(game)
     assert decision == expected

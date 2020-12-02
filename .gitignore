@@ -8,3 +8,4 @@ staticfiles
 *.sqlite3
 __pycache__/
 *.otreezip
+__temp_migrations/
